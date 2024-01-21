@@ -1,0 +1,15 @@
+#converts pdf to images, and extracts text from images
+
+def pdf_to_text(folder_path):
+  image_files = [f for f in os.listdir(folder_path) if f.endswith(('.png', '.jpg', '.jpeg'))]
+  text1 = ""
+# iterate over each image file
+  for image_file in image_files:
+    # construct the full path to the image file
+    image_path = os.path.join(folder_path, image_file)
+
+    # use pytesseract to extract text from the image
+    text1 += pytesseract.image_to_string(image_path)
+
+    # print the extracted text
+  return text1
