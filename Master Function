@@ -1,0 +1,53 @@
+#it takes as input file_type, class of student, the maximum marks that can be obtained in the desired question paper, path to the file
+
+def final_fnctn(file_type, std, marks, path=""):
+  if(file_type == "pdf"):
+    if __name__ == "__main__":
+      pdf_path = path
+      output_folder = "/content/images"
+      convert_pdf_to_images(pdf_path, output_folder)
+
+    text = pdf_to_text(output_folder)
+
+
+  else:
+    img_path1 = path
+    text = pytesseract.image_to_string(img_path1,lang='eng')
+
+
+
+  response = requests.post(
+    url="https://openrouter.ai/api/v1/chat/completions",
+    headers={
+      "Authorization": f"Bearer {OPENROUTER_API_KEY}"
+      # "HTTP-Referer": f"{YOUR_SITE_URL}", # Optional, for including your app on openrouter.ai rankings.
+      # "X-Title": f"{YOUR_APP_NAME}", # Optional. Shows in rankings on openrouter.ai.
+    },
+    data=json.dumps({
+      "model": "openai/gpt-3.5-turbo", # Optional
+      "messages": [
+        {"role": "user", "content": f"can you please summarize from what all topics the questions have been asked in this question paper for class {std} CBSE (exclude name of subject):\n" + s}
+      ]
+    })
+  )
+
+  syl = response.json()['choices'][0]['message']['content'] #stores the syllabus of questions asked a
+
+  response = requests.post(
+    url="https://openrouter.ai/api/v1/chat/completions",
+    headers={
+      "Authorization": f"Bearer {OPENROUTER_API_KEY}"
+      # "HTTP-Referer": f"{YOUR_SITE_URL}", # Optional, for including your app on openrouter.ai rankings.
+      # "X-Title": f"{YOUR_APP_NAME}", # Optional. Shows in rankings on openrouter.ai.
+    },
+    data=json.dumps({
+      "model": "openai/gpt-3.5-turbo", # Optional
+      "messages": [
+        {"role": "user", "content": f"Create a question paper of {marks} for a student in class {std} CBSE, with marking scheme used and answer key in the end:\n, on syllabus " + syl}
+      ]
+    })
+  )
+
+  qp = response.json()['choices'][0]['message']['content']
+
+  return qp #returns the final question paper
