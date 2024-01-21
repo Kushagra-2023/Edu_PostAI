@@ -23,11 +23,11 @@ Workflow for generating a question paper based on syllabus gathered from input q
 please find the documentation of our project at https://github.com/Kushagra-2023/Edu_PostAI .
 
 #REFRENCES:
-https://huggingface.co/
-https://www.blackbox.ai/
-https://chat.openai.com/
-https://byjus.com/
-https://www.google.com/
+https://huggingface.co/ "\n"
+https://www.blackbox.ai/ "\n"
+https://chat.openai.com/ "\n"
+https://byjus.com/ "\n"
+https://www.google.com/ "\n"
 
 #CONTRIBUTORS:
 @Harshvardhan-To1
