@@ -1,6 +1,7 @@
 import fitz  # PyMuPDF
 import os
 from PIL import Image
+import tempfile
 
 def convert_pdf_to_images(pdf_path, output_folder):
     # Create the output folder if it doesn't exist
