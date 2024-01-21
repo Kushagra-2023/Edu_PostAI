@@ -1,4 +1,11 @@
 #converts pdf to images, and extracts text from images
+!sudo apt install tesseract-ocr
+!pip install pytesseract
+
+import pytesseract
+from pytesseract import Output
+from PIL import Image
+import cv2
 
 def pdf_to_text(folder_path):
   image_files = [f for f in os.listdir(folder_path) if f.endswith(('.png', '.jpg', '.jpeg'))]
