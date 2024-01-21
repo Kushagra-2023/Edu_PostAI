@@ -1,0 +1,6 @@
+!pip install pymupdf Pillow
+!pip install --upgrade pymupdf
+!pip install fitz[all] Pillow
+!pip install PdfReader
+!pip install pdfreader
+!pip install fitz
