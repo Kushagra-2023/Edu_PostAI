@@ -4,3 +4,5 @@
 !pip install PdfReader
 !pip install pdfreader
 !pip install fitz
+!sudo apt install tesseract-ocr
+!pip install pytesseract
