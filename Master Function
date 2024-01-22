@@ -31,7 +31,7 @@ def final_fnctn(file_type, std, marks, path=""):
     })
   )
 
-  syl = response.json()['choices'][0]['message']['content'] #stores the syllabus of questions asked a
+  syl = response.json()['choices'][0]['message']['content'] #stores the syllabus of questions asked in the paper uploaded
 
   response = requests.post(
     url="https://openrouter.ai/api/v1/chat/completions",
@@ -48,6 +48,6 @@ def final_fnctn(file_type, std, marks, path=""):
     })
   )
 
-  qp = response.json()['choices'][0]['message']['content']
+  qp = response.json()['choices'][0]['message']['content'] #the final question paper 
 
   return qp #returns the final question paper
