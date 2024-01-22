@@ -1,0 +1,157 @@
+#this has a bit alterations to the original code we used for deploying models, but it produces the same results
+
+import streamlit as st
+import requests
+import os
+import pytesseract
+from pytesseract import Output
+from PIL import Image
+import fitz  # PyMuPDF
+import os
+import json
+
+
+def pdf_to_image(pdf_content):
+    # Open the PDF content from the stream
+    pdf_document = fitz.open("pdf", pdf_content)
+    images = []
+    for page_number in range(pdf_document.page_count):
+        # Get the page
+        page = pdf_document[page_number]
+
+        # Convert the page to an image
+        image_list = page.get_pixmap()
+        image = Image.frombytes("RGB", [image_list.width, image_list.height], image_list.samples)
+        images.append(image)
+    # Close the PDF file
+    pdf_document.close()
+    return images
+
+def clear_input_field():
+    st.session_state.user_question =  st.session_state.user_input
+    st.session_state.user_input = ''
+def set_send_input():
+    st.session_state.send_input = True
+    clear_input_field()
+    chat_history()
+
+
+def final_fnctn(file_type, std, marks,file):
+    Text =''
+    OPENROUTER_API_KEY = "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"
+    if(file_type == "pdf"):
+        if file :
+            pdf_content = file.read()
+            images = pdf_to_image(pdf_content)
+            text = ''
+        # Perform OCR on each image
+            for i, image in enumerate(images):
+            #st.image(image, caption=f"Page {i + 1}", use_column_width=True)
+
+            # Perform OCR using pytesseract
+                text = pytesseract.image_to_string(image)
+            #st.write(f"Page {i + 1} OCR Result:")
+                try:
+                    text = pytesseract.image_to_string(image)
+                except Exception as e:
+                    st.write("Error")
+            #st.write(text)
+                Text+=text
+    else:
+        Text += pytesseract.image_to_string(file)
+        try:
+            text = pytesseract.image_to_string(image)
+        except Exception as e:
+            st.write("Error")
+    response = requests.post(
+    url="https://openrouter.ai/api/v1/chat/completions",
+    headers={
+      "Authorization": f"Bearer {OPENROUTER_API_KEY}"
+    },
+    data=json.dumps({
+      "model": "openai/gpt-3.5-turbo", # Optional
+      "messages": [
+        {"role": "user", "content": f"can you please summarize from what all topics the questions have been asked in this question paper for class {std} CBSE (exclude name of subject):\n" + Text}
+      ]
+    })
+  )
+    syl = response.json()['choices'][0]['message']['content']
+    response = requests.post(
+    url="https://openrouter.ai/api/v1/chat/completions",
+    headers={
+      "Authorization": f"Bearer {OPENROUTER_API_KEY}"
+      # "HTTP-Referer": f"{YOUR_SITE_URL}", # Optional, for including your app on openrouter.ai rankings.
+      # "X-Title": f"{YOUR_APP_NAME}", # Optional. Shows in rankings on openrouter.ai.
+    },
+    data=json.dumps({
+      "model": "openai/gpt-3.5-turbo", # Optional
+      "messages": [
+        {"role": "user", "content": f"Create a question paper of {marks} for a student in class {std} CBSE, with marking scheme used and answer key in the end:\n, on syllabus " + syl}
+      ]
+    })
+  )
+
+    return response.json()['choices'][0]['message']['content']
+def chat(statement):
+# Load model directly
+    OPENROUTER_API_KEY = "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"
+    response = requests.post(url="https://openrouter.ai/api/v1/chat/completions",headers={
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}"
+        # "HTTP-Referer": f"{YOUR_SITE_URL}", # Optional, for including your app on openrouter.ai rankings.
+        # "X-Title": f"{YOUR_APP_NAME}", # Optional. Shows in rankings on openrouter.ai.
+      },
+    data=json.dumps({
+        "model": "openai/gpt-3.5-turbo", # Optional
+        "messages": [
+          {"role": "user", "content": statement}
+        ]
+      })
+    )
+
+    return response.json()['choices'][0]['message']['content']
+def chat_history():
+    st.session_state['chat_history'].append({"role":"user" , "content":st.session_state.user_question })
+
+def main():
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'  # Modify the path accordingly
+    st.title("Edu_PostAI")
+    grade = st.slider("Grade ",min_value = 6 , max_value = 10 )
+    number =st.number_input("Marks",min_value = 10 , max_value = 100,step=5,value =35)
+    chat_container = st.container()
+    st.sidebar.title("Uploading Session")
+    option = st.sidebar.selectbox("Options" , ('Text','Upload pdf '), index = 0 )
+    opt = [False , True ]
+    if option == 'Upload pdf ':
+        opt[0] = True
+        opt[1] = False
+    file = st.sidebar.file_uploader("Upload pdf file " , type = ['pdf'],disabled = opt[1])
+    user_input, send_button= st.columns(2)        
+    if "chat_history" not in st.session_state:
+        st.session_state["chat_history"] = []
+    if "send_input" not in st.session_state:
+        st.session_state.send_input = False
+        st.session_state.user_question= ''
+    user_input = st.text_input("TYPE YOUR MESSAGE HERE", key = 'user_input' , on_change = set_send_input , disabled = opt[0])
+    send_button = st.button("Send",key= 'send_button')
+    statement_store =''
+    if send_button and opt[0] and len(file.name)!= 0 :
+        with chat_container:
+            st.chat_message("AI").write(final_fnctn('pdf', grade, number,file))
+            #st.session_state['chat_history'].append({"role":"AI" , "content":final_fnctn(N, grade, number,file)})
+
+    if ((send_button or st.session_state.send_input) and opt[1] ):
+        if st.session_state.user_question!='':
+            llm_response = "This is a response"
+            with chat_container:
+                st.chat_message("user").write(st.session_state.user_question)
+                statement_store +=chat(st.session_state.user_question)
+                st.chat_message("AI").write(chat(st.session_state.user_question))
+                st.session_state['chat_history'].append({"role":"AI" , "content":statement_store})
+
+    if len(st.session_state.chat_history) != 0:
+        st.write("Chat_history")   
+        for i in st.session_state["chat_history"] :
+            st.chat_message(name=i["role"]).write(i['content'])
+
+if __name__=="__main__":
+    main()
